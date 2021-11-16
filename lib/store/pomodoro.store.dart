@@ -13,19 +13,19 @@ abstract class _PomodoroStore with Store {
   bool iniciado = false;
 
   @observable
-  int minutos = 2;
+  int minutos = 25;
 
   @observable
   int segundos = 0;
 
   @observable
-  int tempoTrabalho = 2;
+  int tempoTrabalho = 25;
 
   @observable
-  int tempoDescanso = 1;
+  int tempoDescanso = 5;
 
   @observable
-  TipoIntervalo tipoIntervalo = TipoIntervalo.descanso;
+  TipoIntervalo tipoIntervalo = TipoIntervalo.trabalho;
 
   Timer? cronometro;
 
@@ -36,7 +36,7 @@ abstract class _PomodoroStore with Store {
     // Timer.periodic() cria uma funcao que é chamada
     // no periodo de intervalo especificado
     // nesse caso é chamada a cada um segundo
-    cronometro = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+    cronometro = Timer.periodic(const Duration(seconds: 1), (timer) {
       // verifica se o cronometro zerou e troca o intervalo
       if (minutos == 0 && segundos == 0) {
         _trocarTipoIntervalo();
@@ -61,27 +61,49 @@ abstract class _PomodoroStore with Store {
 
   @action
   void reiniciar() {
-    iniciado = false;
+    parar();
+    minutos = estaTrabalhando() ? tempoTrabalho : tempoDescanso;
+    segundos = 0;
   }
 
   @action
   void incrementarTempoTrabalho() {
-    tempoTrabalho++;
+    if (tempoTrabalho < 99) {
+      tempoTrabalho++;
+      if (estaTrabalhando()) {
+        reiniciar();
+      }
+    }
   }
 
   @action
   void decrementarTempoTrabalho() {
-    tempoTrabalho--;
+    if (tempoTrabalho > 1) {
+      tempoTrabalho--;
+      if (estaTrabalhando()) {
+        reiniciar();
+      }
+    }
   }
 
   @action
   void incrementarTempoDescanso() {
-    tempoDescanso++;
+    if (tempoDescanso < 99) {
+      tempoDescanso++;
+      if (estaDescansando()) {
+        reiniciar();
+      }
+    }
   }
 
   @action
   void decrementarTempoDescanso() {
-    tempoDescanso--;
+    if (tempoDescanso > 1) {
+      tempoDescanso--;
+      if (estaDescansando()) {
+        reiniciar();
+      }
+    }
   }
 
   bool estaTrabalhando() => tipoIntervalo == TipoIntervalo.trabalho;
